@@ -1,0 +1,106 @@
+apply plugin: "java"
+apply plugin: "maven"
+apply plugin: "application"
+apply plugin: "maven-publish"
+
+group = "com.dellemc.oe.flink"
+version = samplesVersion
+archivesBaseName = "flink-temperature-events"
+description = "flink-temperature-events"
+mainClassName = "com.dellemc.oe.flink.FlinkReader"
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    // Note that we must include the Elasticsearch client early in the classpath to avoid Netty version conflicts.
+    // org.apache.flink:flink-runtime_2.11:1.3.1 includes io.netty:netty-all:4.0.27.Final which is too old.
+    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client:6.5.4"
+    compile "org.slf4j:slf4j-api:1.6.6"
+    compile "ch.qos.logback:logback-classic:1.2.3"
+    compile "ch.qos.logback:logback-core:1.2.3"
+    compile "net.logstash.logback:logstash-logback-encoder:4.11"
+    compile "io.pravega:pravega-connectors-flink_2.12:${pravegaFlinkConnectorVersion}"
+    compile "org.apache.flink:flink-streaming-java_2.11:${flinkVersion}"
+    compile "org.apache.flink:flink-streaming-scala_2.11:${flinkVersion}"
+    compile "org.apache.flink:flink-ml_2.11:${flinkVersion}"
+    compile "org.apache.flink:flink-table_2.11:${flinkVersion}"
+    compile "org.apache.flink:flink-connector-elasticsearch6_2.11:${flinkVersion}"
+//    compile "org.apache.flink:flink-json:${flinkVersion}"
+    compile "io.pravega:pravega-client:${pravegaVersion}",
+            "io.pravega:pravega-common:${pravegaVersion}"
+
+    // common-library dependencies
+    compile "com.google.guava:guava:20.0"
+    compile "org.xerial:sqlite-jdbc:3.20.0"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.9.1"
+
+    testCompile "org.apache.flink:flink-test-utils_2.11:${flinkVersion}"
+    testCompile group: "junit", name: "junit", version: "4.11"
+}
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+shadowJar {
+    dependencies {
+        exclude(dependency("org.scala-lang:scala-library"))
+        exclude(dependency("org.scala-lang:scala-reflect"))
+        exclude(dependency("org.scala-lang:scala-compiler"))
+    }
+
+    relocate "com.google", "com.dell.nautilus.analytics.shaded.com.google"
+    relocate "io.netty", "com.dell.nautilus.analytics.shaded.io.netty"
+
+    classifier = ""
+
+    zip64 true
+}
+
+distributions {
+    main {
+        baseName = archivesBaseName
+        contents {
+            into('bin') {
+                              
+            }
+            into('lib') {
+                from(jar)
+                from(project.configurations.runtime)
+                from shadowJar
+                from(project.configurations.shadow)
+            }
+            into('conf') {
+                from(project.file('src/main/resources/logback.xml'))
+            }
+        }
+    }
+
+
+    publishing {
+       repositories {
+           maven {
+               credentials {
+                   username "nautilus"
+                   password "password"
+               }
+               url = "http://localhost:9090/maven2"
+           }          
+          
+       }
+
+       publications {
+           shadow(MavenPublication) { publication ->
+               project.shadow.component(publication)
+           }
+       }
+}
+
+}

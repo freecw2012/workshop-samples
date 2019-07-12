@@ -1,0 +1,30 @@
+{{- $relname := .Release.Name -}}
+{{- $numApplications := .Values.applications -}}
+{{- $application := .Values.application -}}
+{{- $flinkVersion := .Values.flinkVersion -}}
+{{- range $projectNum, $e := until (int .Values.projects)  }}
+{{- range $applicationNum, $e := until (int $numApplications) }}
+apiVersion: flink.nautilus.dellemc.com/v1beta1
+kind: "FlinkApplication"
+metadata:
+   name: "{{ $application.writerName }}"
+   namespace: "{{ $application.nameSpace }}"
+spec:
+  flinkVersion: {{ $flinkVersion }}
+
+  mavenCoordinate: com.dellemc.oe.flink:flink-temperature-events:{{ $application.mavenVersion }}
+  mainClass: com.dellemc.oe.flink.FlinkWriter
+
+  parallelism: {{ $application.defaultParallelism }}
+
+  state: started
+
+  parameters:
+    - name: sourceParallelism
+      value: "{{ $application.writer.parallelism }}"
+
+    - name: streamName
+      value: "{{ $application.pravega.streamName }}"
+---
+{{- end }}
+{{- end }}

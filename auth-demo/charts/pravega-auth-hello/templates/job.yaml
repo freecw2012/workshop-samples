@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pravega-hello
+  labels:
+    app: pravega-hello
+spec:
+  template:
+    metadata:
+      labels:
+        app: pravega-hello
+    spec:
+      restartPolicy: Never
+      serviceAccountName: pravega-hello
+      containers:
+        - name: default
+          image: pravega-hello:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/opt/pravega-hello/bin/pravega-hello"]
+          env:
+          - name: CONTROLLER_URI
+            value:  tcp://nautilus-pravega-controller.nautilus-pravega.svc.cluster.local:9090
+          - name: SCOPE_NAME
+            value: hello-project
+          - name: STREAM_NAME
+            value: hello-stream
+          - name: pravega_client_auth_method
+            value: Bearer
+          - name: pravega_client_auth_loadDynamic
+            value: "true"

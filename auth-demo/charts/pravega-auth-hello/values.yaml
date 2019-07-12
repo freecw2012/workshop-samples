@@ -1,0 +1,21 @@
+# Default values for pravega-broker.
+
+image:
+  repository: devops-repo.isus.emc.com:8116/pravega-auth-hello
+  tag: 1
+  pullPolicy: IfNotPresent
+
+resources: {}
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+pravega:
+  controller_uri: tcp://nautilus-pravega-controller.nautilus-pravega.svc.cluster.local:9090
+  scope_name: hello-scope
+  stream_name: hello-stream
+  security:
+    method: Bearer
