@@ -57,6 +57,7 @@ public class DataHandler {
 
                 // Write the message to Pravega.
                 Log.debug("routingKey={}, message={}", routingKey, message);
+                System.out.println("message=" + data);
                 final CompletableFuture writeFuture = Main.getWriter().writeEvent(routingKey, message);
 
                 // Wait for acknowledgement that the event was durably persisted.

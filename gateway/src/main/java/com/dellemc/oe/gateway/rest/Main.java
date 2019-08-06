@@ -1,6 +1,7 @@
 package com.dellemc.oe.gateway.rest;
 
 import com.dellemc.oe.util.CommonParams;
+import com.dellemc.oe.serialization.JsonNodeSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.pravega.client.ClientFactory;
 import io.pravega.client.admin.StreamManager;
