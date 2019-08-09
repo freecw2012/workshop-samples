@@ -1,5 +1,6 @@
 package com.dellemc.oe.gateway.grpc;
 
+import com.dellemc.oe.util.CommonParams;
 import com.google.protobuf.ByteString;
 import io.grpc.Context;
 import io.grpc.Status;
@@ -29,7 +30,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
 
     @Override
     public void createScope(CreateScopeRequest req, StreamObserver<CreateScopeResponse> responseObserver) {
-        try (StreamManager streamManager = StreamManager.create(Parameters.getControllerURI())) {
+        try (StreamManager streamManager = StreamManager.create(CommonParams.getControllerURI())) {
             boolean created = streamManager.createScope(req.getScope());
             responseObserver.onNext(CreateScopeResponse.newBuilder().setCreated(created).build());
             responseObserver.onCompleted();
@@ -38,7 +39,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
 
     @Override
     public void createStream(CreateStreamRequest req, StreamObserver<CreateStreamResponse> responseObserver) {
-        try (StreamManager streamManager = StreamManager.create(Parameters.getControllerURI())) {
+        try (StreamManager streamManager = StreamManager.create(CommonParams.getControllerURI())) {
             final int minNumSegments = Integer.max(1, req.getScalingPolicy().getMinNumSegments());
             StreamConfiguration streamConfig = StreamConfiguration.builder()
                     .scalingPolicy(io.pravega.client.stream.ScalingPolicy.fixed(minNumSegments))
@@ -51,7 +52,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
 
     @Override
     public void updateStream(UpdateStreamRequest req, StreamObserver<UpdateStreamResponse> responseObserver) {
-        try (StreamManager streamManager = StreamManager.create(Parameters.getControllerURI())) {
+        try (StreamManager streamManager = StreamManager.create(CommonParams.getControllerURI())) {
             StreamConfiguration streamConfig = StreamConfiguration.builder()
                     .scalingPolicy(io.pravega.client.stream.ScalingPolicy.fixed(req.getScalingPolicy().getMinNumSegments()))
                     .build();
@@ -63,7 +64,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
 
     @Override
     public void readEvents(ReadEventsRequest req, StreamObserver<ReadEventsResponse> responseObserver) {
-        final URI controllerURI = Parameters.getControllerURI();
+        final URI controllerURI = CommonParams.getControllerURI();
         final String scope = req.getScope();
         final String streamName = req.getStream();
         // TODO: support bounded streams
@@ -142,7 +143,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
             public void onNext(WriteEventsRequest req) {
                 logger.fine("writeEvents: req=" + req.toString());
                 if (writer == null) {
-                    final URI controllerURI = Parameters.getControllerURI();
+                    final URI controllerURI = CommonParams.getControllerURI();
                     scope = req.getScope();
                     streamName = req.getStream();
                     useTransaction = req.getUseTransaction();
@@ -242,7 +243,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
 
     @Override
     public void getStreamInfo(GetStreamInfoRequest req, StreamObserver<GetStreamInfoResponse> responseObserver) {
-        try (StreamManager streamManager = StreamManager.create(Parameters.getControllerURI())) {
+        try (StreamManager streamManager = StreamManager.create(CommonParams.getControllerURI())) {
             StreamInfo streamInfo = streamManager.getStreamInfo(req.getScope(), req.getStream());
             StreamCut.Builder headStreamCutBuilder = StreamCut.newBuilder()
                     .setText(streamInfo.getHeadStreamCut().asText());
@@ -265,7 +266,7 @@ class PravegaServerImpl extends PravegaGatewayGrpc.PravegaGatewayImplBase {
 
     @Override
     public void batchReadEvents(BatchReadEventsRequest req, StreamObserver<BatchReadEventsResponse> responseObserver) {
-        final URI controllerURI = Parameters.getControllerURI();
+        final URI controllerURI = CommonParams.getControllerURI();
         final String scope = req.getScope();
         final String streamName = req.getStream();
         io.pravega.client.stream.StreamCut fromStreamCut = io.pravega.client.stream.StreamCut.from(req.getFromStreamCut().getText());
